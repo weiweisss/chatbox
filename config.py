@@ -25,7 +25,7 @@ class ConfigManager:
                 "autostart": False,
                 "ais": {
                     default_ai_id: {
-                        "name": "默认AI",
+                        "name": "显示名称",
                         "api_key": "",
                         "base_url": "https://api.openai.com/v1",
                         "model": "gpt-3.5-turbo"

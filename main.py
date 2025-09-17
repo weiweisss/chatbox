@@ -25,10 +25,12 @@ from autostart import AutoStartManager
 class ChatGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("AI助手")
         self.root.geometry("400x500")
         self.root.overrideredirect(True)  # 无边框窗口
         self.root.attributes('-topmost', True)  # 窗口置顶
+        
+        # 绑定主窗口关闭事件
+        self.root.protocol("WM_DELETE_WINDOW", self.on_main_window_close)
         
         # 设置应用程序图标
         self.set_application_icon()
@@ -199,7 +201,8 @@ class ChatGUI:
     def update_title(self):
         """更新标题显示当前AI"""
         current_ai_name = self.api_manager.get_current_ai_name()
-        self.title_label.config(text=f"AI助手 - {current_ai_name}")
+        self.root.title(current_ai_name)
+        self.title_label.config(text=current_ai_name)
         
     def minimize_window(self):
         """最小化窗口"""
@@ -242,6 +245,9 @@ class ChatGUI:
             
             # 设置窗口属性
             self.notification_window.attributes('-topmost', True)
+            
+            # 绑定窗口关闭事件
+            self.notification_window.protocol("WM_DELETE_WINDOW", self.on_notification_window_close)
             
             # 创建主框架
             main_frame = tk.Frame(self.notification_window)
@@ -308,9 +314,11 @@ class ChatGUI:
             print(f"设置窗口图标时出错: {e}")
             
     def quick_send_message(self):
-        """快速发送消息"""
+        """快速发送消息并退出程序"""
         message = self.quick_input.get().strip()
         if not message:
+            # 如果没有消息，直接退出程序
+            self.root.destroy()
             return
             
         try:
@@ -318,6 +326,8 @@ class ChatGUI:
             ai_config = self.api_manager.get_current_ai_config()
             if not ai_config:
                 messagebox.showerror("错误", "未配置AI")
+                # 出错后直接退出程序
+                self.root.destroy()
                 return
                 
             # 显示处理中提示
@@ -332,6 +342,8 @@ class ChatGUI:
             self.quick_input.config(state=tk.NORMAL)
             self.quick_input.delete(0, tk.END)
             messagebox.showerror("错误", f"发送失败: {str(e)}")
+            # 出错后直接退出程序
+            self.root.destroy()
             
     def process_quick_message(self, user_message):
         """处理快速消息"""
@@ -359,10 +371,6 @@ class ChatGUI:
         except:
             pass
             
-        # 恢复主窗口
-        self.root.deiconify()
-        self.root.lift()
-        
         # 创建新会话（清空当前显示）
         self.chat_display.config(state=tk.NORMAL)
         self.chat_display.delete(1.0, tk.END)
@@ -384,6 +392,9 @@ class ChatGUI:
             self.history_manager.save_current_history(history)
         except Exception as e:
             print(f"保存快速聊天记录时出错: {e}")
+            
+        # 直接退出程序
+        self.root.destroy()
         
     def show_quick_error(self, error_message):
         """显示快速响应错误"""
@@ -392,12 +403,11 @@ class ChatGUI:
         except:
             pass
             
-        # 恢复主窗口
-        self.root.deiconify()
-        self.root.lift()
-        
         # 显示错误
         self.display_message("系统", f"错误: {error_message}")
+        
+        # 直接退出程序
+        self.root.destroy()
             
     def restore_from_notification(self):
         """从通知恢复窗口"""
@@ -405,8 +415,28 @@ class ChatGUI:
             self.notification_window.destroy()
         except:
             pass
-        self.root.deiconify()
-        self.root.lift()
+        # 直接退出程序而不是恢复主窗口
+        self.root.destroy()
+        
+    def on_notification_window_close(self):
+        """处理通知窗口关闭事件"""
+        # 销毁通知窗口
+        try:
+            self.notification_window.destroy()
+        except:
+            pass
+        # 直接退出程序
+        self.root.destroy()
+        
+    def on_main_window_close(self):
+        """处理主窗口关闭事件"""
+        # 销毁可能存在的通知窗口
+        try:
+            self.notification_window.destroy()
+        except:
+            pass
+        # 退出程序
+        self.root.destroy()
         
     def send_message_enter(self, event):
         """回车键发送消息"""

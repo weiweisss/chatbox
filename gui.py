@@ -12,13 +12,16 @@ from autostart import AutoStartManager
 class ChatGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("AI助手")
+        self.config_manager = ConfigManager()
+        # 获取当前AI名称并设置窗口标题
+        default_ai_id, default_ai_config = self.config_manager.get_default_ai()
+        ai_name = default_ai_config["name"] if default_ai_id and default_ai_config else "AI助手"
+        self.root.title(ai_name)
         self.root.geometry("400x500")
         self.root.attributes('-topmost', True)  # 窗口置顶
         self.root.overrideredirect(True)  # 无边框窗口
         
         # 初始化组件
-        self.config_manager = ConfigManager()
         self.api_manager = APIManager(self.config_manager)
         self.history_manager = ConversationHistory()
         
@@ -35,8 +38,12 @@ class ChatGUI:
         self.title_bar.pack(fill=tk.X)
         self.title_bar.pack_propagate(False)
         
+        # 获取当前AI名称
+        default_ai_id, default_ai_config = self.config_manager.get_default_ai()
+        ai_name = default_ai_config["name"] if default_ai_id and default_ai_config else "AI助手"
+        
         # 标题文本
-        title_label = tk.Label(self.title_bar, text="AI助手", bg="#2c3e50", fg="white", font=("Arial", 10))
+        title_label = tk.Label(self.title_bar, text=ai_name, bg="#2c3e50", fg="white", font=("Arial", 10))
         title_label.pack(side=tk.LEFT, padx=10, pady=5)
         
         # 关闭按钮
@@ -166,6 +173,17 @@ class ChatGUI:
         self.chat_display.config(state=tk.DISABLED)
         self.chat_display.see(tk.END)
         
+    def update_title(self, ai_name):
+        """更新窗口标题和标题栏显示"""
+        # 更新窗口标题
+        self.root.title(ai_name)
+        
+        # 更新标题栏文本
+        for widget in self.title_bar.winfo_children():
+            if isinstance(widget, tk.Label) and widget.cget("bg") == "#2c3e50":
+                widget.config(text=ai_name)
+                break
+        
     def open_settings(self):
         """打开设置窗口"""
         settings_window = tk.Toplevel(self.root)
@@ -174,23 +192,32 @@ class ChatGUI:
         settings_window.transient(self.root)
         settings_window.grab_set()
         
+        # 获取当前默认AI配置
+        default_ai_id, default_ai_config = self.config_manager.get_default_ai()
+        
         # API密钥设置
         tk.Label(settings_window, text="API密钥:").pack(anchor=tk.W, padx=10, pady=(10, 0))
-        api_key_var = tk.StringVar(value=self.config_manager.get("api_key", ""))
+        api_key_var = tk.StringVar(value=default_ai_config.get("api_key", "") if default_ai_config else "")
         api_key_entry = tk.Entry(settings_window, textvariable=api_key_var, width=50, show="*")
         api_key_entry.pack(padx=10, pady=5, fill=tk.X)
         
         # API基础URL设置
         tk.Label(settings_window, text="API基础URL:").pack(anchor=tk.W, padx=10, pady=(10, 0))
-        base_url_var = tk.StringVar(value=self.config_manager.get("base_url", "https://api.openai.com/v1"))
+        base_url_var = tk.StringVar(value=default_ai_config.get("base_url", "https://api.openai.com/v1") if default_ai_config else "")
         base_url_entry = tk.Entry(settings_window, textvariable=base_url_var, width=50)
         base_url_entry.pack(padx=10, pady=5, fill=tk.X)
         
         # 模型选择
         tk.Label(settings_window, text="模型:").pack(anchor=tk.W, padx=10, pady=(10, 0))
-        model_var = tk.StringVar(value=self.config_manager.get("model", "gpt-3.5-turbo"))
+        model_var = tk.StringVar(value=default_ai_config.get("model", "gpt-3.5-turbo") if default_ai_config else "")
         model_entry = tk.Entry(settings_window, textvariable=model_var, width=50)
         model_entry.pack(padx=10, pady=5, fill=tk.X)
+        
+        # AI名称设置
+        tk.Label(settings_window, text="AI名称:").pack(anchor=tk.W, padx=10, pady=(10, 0))
+        ai_name_var = tk.StringVar(value=default_ai_config.get("name", "AI助手") if default_ai_config else "AI助手")
+        ai_name_entry = tk.Entry(settings_window, textvariable=ai_name_var, width=50)
+        ai_name_entry.pack(padx=10, pady=5, fill=tk.X)
         
         # 开机自启动设置
         autostart_var = tk.BooleanVar(value=self.config_manager.get("autostart", False))
@@ -199,9 +226,16 @@ class ChatGUI:
         
         # 保存按钮
         def save_settings():
-            self.config_manager.set("api_key", api_key_var.get())
-            self.config_manager.set("base_url", base_url_var.get())
-            self.config_manager.set("model", model_var.get())
+            # 更新默认AI配置
+            if default_ai_id and default_ai_config:
+                self.config_manager.update_ai(
+                    default_ai_id,
+                    ai_name_var.get(),
+                    api_key_var.get(),
+                    base_url_var.get(),
+                    model_var.get()
+                )
+            
             self.config_manager.set("autostart", autostart_var.get())
             
             # 更新API管理器配置
@@ -213,6 +247,9 @@ class ChatGUI:
                 autostart_manager.enable_autostart()
             else:
                 autostart_manager.disable_autostart()
+                
+            # 更新窗口标题
+            self.update_title(ai_name_var.get())
                 
             settings_window.destroy()
             

@@ -1,6 +1,12 @@
 {
   "autostart": false,
   "ais": {
+    "bb145d18-6dc0-4175-a69b-ed71e3543fd3": {
+      "name": "LongCat",
+      "api_key": "ak_1np7Vs2na7GT13h8nH8VU2VK9166p",
+      "base_url": "https://api.longcat.chat/openai",
+      "model": "LongCat-Flash-Chat"
+    }
   },
-  "default_ai": "e6502ce5-8c7d-48ff-8937-6d754263664b"
+  "default_ai": "bb145d18-6dc0-4175-a69b-ed71e3543fd3"
 }
