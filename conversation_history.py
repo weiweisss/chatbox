@@ -2,10 +2,11 @@ import json
 import os
 from datetime import datetime
 from typing import List, Dict
+from config import DATA_DIR # 导入绝对路径
 
 class ConversationHistory:
-    def __init__(self, history_dir="data/history"):
-        self.history_dir = history_dir
+    def __init__(self):
+        self.history_dir = os.path.join(DATA_DIR, "history") # 使用绝对路径
         self.current_session_id = None
         self.ensure_history_dir()
         

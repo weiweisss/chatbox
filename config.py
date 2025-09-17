@@ -1,20 +1,30 @@
 import json
 import os
+import sys
 import uuid
 from datetime import datetime
 
+# Determine the base path for data files, works for script and frozen exe
+if getattr(sys, 'frozen', False):
+    # Running as a bundled exe
+    APP_BASE_DIR = os.path.dirname(sys.executable)
+else:
+    # Running as a .py script
+    APP_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATA_DIR = os.path.join(APP_BASE_DIR, 'data')
+
 class ConfigManager:
-    def __init__(self, config_file="data/config.json"):
-        self.config_file = config_file
+    def __init__(self):
+        self.config_file = os.path.join(DATA_DIR, "config.json")
         self.config = {}
         self.load_config()
         
     def load_config(self):
         """加载配置文件"""
         # 确保数据目录存在
-        data_dir = os.path.dirname(self.config_file)
-        if data_dir and not os.path.exists(data_dir):
-            os.makedirs(data_dir)
+        if not os.path.exists(DATA_DIR):
+            os.makedirs(DATA_DIR)
             
         # 如果配置文件不存在，创建默认配置
         if not os.path.exists(self.config_file):
