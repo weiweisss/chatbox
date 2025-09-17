@@ -58,12 +58,12 @@ class ChatGUI:
         try:
             # 定义图标文件路径（支持多种格式）
             icon_paths = [
-                "icons/ai_icon.ico",    # 首选ICO图标
-                "icons/ai_icon.png",    # PNG格式图标
-                "data/ai_icon.ico",     # 备选ICO图标
+                "icons/ai_icon.png",    # PNG格式图标（优先使用PNG）
+                "icons/ai_icon.ico",    # ICO图标
                 "data/ai_icon.png",     # 备选PNG图标
-                "ai_icon.ico",          # 根目录ICO图标
-                "ai_icon.png"           # 根目录PNG图标
+                "data/ai_icon.ico",     # 备选ICO图标
+                "ai_icon.png",          # 根目录PNG图标
+                "ai_icon.ico"           # 根目录ICO图标
             ]
             
             # 尝试加载自定义图标
@@ -71,9 +71,10 @@ class ChatGUI:
             for icon_path in icon_paths:
                 if os.path.exists(icon_path):
                     try:
-                        if icon_path.endswith('.png') and PIL_AVAILABLE:
-                            # 处理PNG图标
-                            self.set_png_icon(self.root, icon_path)
+                        # 优先使用PNG图标，因为它在任务栏中显示效果更好
+                        if icon_path.endswith('.png'):
+                            # 使用iconphoto设置PNG图标
+                            self.root.iconphoto(True, tk.PhotoImage(file=icon_path))
                         else:
                             # 处理ICO图标
                             self.root.iconbitmap(icon_path)
@@ -86,7 +87,26 @@ class ChatGUI:
             # 如果没有找到自定义图标，使用默认图标
             if not icon_set:
                 # 设置默认的Tk图标（这会使用系统的默认图标）
-                self.root.iconbitmap(default=True)
+                try:
+                    self.root.iconbitmap(default=True)
+                except:
+                    pass
+            
+            # 在Windows上设置任务栏图标
+            try:
+                import ctypes
+                # 获取图标文件路径
+                icon_path = None
+                for path in icon_paths:
+                    if os.path.exists(path) and path.endswith('.png'):
+                        icon_path = path
+                        break
+                
+                if icon_path:
+                    # 设置任务栏图标
+                    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("AI助手")
+            except:
+                pass
                 
         except Exception as e:
             print(f"设置图标时出错: {e}")
@@ -236,12 +256,17 @@ class ChatGUI:
         try:
             # 创建一个临时的顶层窗口作为任务栏提醒（搜索栏样式）
             self.notification_window = tk.Toplevel()
-            self.notification_window.title("AI助手")
+            # 使用当前AI名称作为窗口标题
+            current_ai_name = self.api_manager.get_current_ai_name()
+            self.notification_window.title(current_ai_name)
             self.notification_window.geometry("400x100")  # 横向长条形窗口
             self.notification_window.resizable(False, False)
             
             # 设置窗口图标
             self.set_window_icon(self.notification_window)
+            
+            # 确保窗口在任务栏中显示
+            self.notification_window.wm_attributes("-toolwindow", False)
             
             # 设置窗口属性
             self.notification_window.attributes('-topmost', True)
@@ -254,7 +279,7 @@ class ChatGUI:
             main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
             
             # 添加标签
-            tk.Label(main_frame, text="AI助手", font=("Arial", 10)).pack(anchor=tk.W)
+            tk.Label(main_frame, text=current_ai_name, font=("Arial", 10)).pack(anchor=tk.W)
             
             # 创建输入框架
             input_frame = tk.Frame(main_frame)
@@ -284,21 +309,22 @@ class ChatGUI:
         try:
             # 定义图标文件路径（支持多种格式）
             icon_paths = [
-                "icons/ai_icon.ico",    # 首选ICO图标
-                "icons/ai_icon.png",    # PNG格式图标
-                "data/ai_icon.ico",     # 备选ICO图标
+                "icons/ai_icon.png",    # PNG格式图标（优先使用PNG）
+                "icons/ai_icon.ico",    # ICO图标
                 "data/ai_icon.png",     # 备选PNG图标
-                "ai_icon.ico",          # 根目录ICO图标
-                "ai_icon.png"           # 根目录PNG图标
+                "data/ai_icon.ico",     # 备选ICO图标
+                "ai_icon.png",          # 根目录PNG图标
+                "ai_icon.ico"           # 根目录ICO图标
             ]
             
             # 尝试加载自定义图标
             for icon_path in icon_paths:
                 if os.path.exists(icon_path):
                     try:
-                        if icon_path.endswith('.png') and PIL_AVAILABLE:
-                            # 处理PNG图标
-                            self.set_png_icon(window, icon_path)
+                        # 优先使用PNG图标，因为它在任务栏中显示效果更好
+                        if icon_path.endswith('.png'):
+                            # 使用iconphoto设置PNG图标
+                            window.iconphoto(True, tk.PhotoImage(file=icon_path))
                         else:
                             # 处理ICO图标
                             window.iconbitmap(icon_path)
@@ -307,18 +333,26 @@ class ChatGUI:
                         print(f"无法加载图标 {icon_path}: {e}")
                         continue
                         
-            # 如果没有找到自定义图标，使用主窗口的图标
-            window.iconbitmap(default=True)
+            # 如果没有找到自定义图标，尝试使用主窗口的图标
+            try:
+                window.iconbitmap(default=True)
+            except:
+                pass
             
         except Exception as e:
             print(f"设置窗口图标时出错: {e}")
             
     def quick_send_message(self):
-        """快速发送消息并退出程序"""
+        """快速发送消息"""
         message = self.quick_input.get().strip()
         if not message:
-            # 如果没有消息，直接退出程序
-            self.root.destroy()
+            # 如果没有消息，恢复主窗口
+            self.root.deiconify()
+            self.root.lift()
+            try:
+                self.notification_window.destroy()
+            except:
+                pass
             return
             
         try:
@@ -326,8 +360,13 @@ class ChatGUI:
             ai_config = self.api_manager.get_current_ai_config()
             if not ai_config:
                 messagebox.showerror("错误", "未配置AI")
-                # 出错后直接退出程序
-                self.root.destroy()
+                # 出错后恢复主窗口
+                self.root.deiconify()
+                self.root.lift()
+                try:
+                    self.notification_window.destroy()
+                except:
+                    pass
                 return
                 
             # 显示处理中提示
@@ -342,8 +381,13 @@ class ChatGUI:
             self.quick_input.config(state=tk.NORMAL)
             self.quick_input.delete(0, tk.END)
             messagebox.showerror("错误", f"发送失败: {str(e)}")
-            # 出错后直接退出程序
-            self.root.destroy()
+            # 出错后恢复主窗口
+            self.root.deiconify()
+            self.root.lift()
+            try:
+                self.notification_window.destroy()
+            except:
+                pass
             
     def process_quick_message(self, user_message):
         """处理快速消息"""
@@ -371,6 +415,10 @@ class ChatGUI:
         except:
             pass
             
+        # 恢复主窗口
+        self.root.deiconify()
+        self.root.lift()
+        
         # 创建新会话（清空当前显示）
         self.chat_display.config(state=tk.NORMAL)
         self.chat_display.delete(1.0, tk.END)
@@ -392,9 +440,6 @@ class ChatGUI:
             self.history_manager.save_current_history(history)
         except Exception as e:
             print(f"保存快速聊天记录时出错: {e}")
-            
-        # 直接退出程序
-        self.root.destroy()
         
     def show_quick_error(self, error_message):
         """显示快速响应错误"""
@@ -403,11 +448,12 @@ class ChatGUI:
         except:
             pass
             
+        # 恢复主窗口
+        self.root.deiconify()
+        self.root.lift()
+        
         # 显示错误
         self.display_message("系统", f"错误: {error_message}")
-        
-        # 直接退出程序
-        self.root.destroy()
             
     def restore_from_notification(self):
         """从通知恢复窗口"""
@@ -415,8 +461,9 @@ class ChatGUI:
             self.notification_window.destroy()
         except:
             pass
-        # 直接退出程序而不是恢复主窗口
-        self.root.destroy()
+        # 恢复主窗口
+        self.root.deiconify()
+        self.root.lift()
         
     def on_notification_window_close(self):
         """处理通知窗口关闭事件"""
@@ -425,8 +472,9 @@ class ChatGUI:
             self.notification_window.destroy()
         except:
             pass
-        # 直接退出程序
-        self.root.destroy()
+        # 恢复主窗口
+        self.root.deiconify()
+        self.root.lift()
         
     def on_main_window_close(self):
         """处理主窗口关闭事件"""
