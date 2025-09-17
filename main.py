@@ -926,6 +926,18 @@ class ChatGUI:
         delete_btn = tk.Button(history_window, text="删除", command=delete_session)
         delete_btn.pack(side=tk.LEFT, padx=10, pady=10)
         
+        # 清除所有历史记录按钮
+        def clear_all_history():
+            # 确认删除
+            if messagebox.askyesno("确认清除", "确定要删除所有历史记录吗？此操作不可恢复。"):
+                self.history_manager.clear_all_history()
+                history_listbox.delete(0, tk.END)
+                sessions.clear()
+                messagebox.showinfo("完成", "所有历史记录已清除")
+                    
+        clear_all_btn = tk.Button(history_window, text="清除所有历史记录", command=clear_all_history)
+        clear_all_btn.pack(side=tk.LEFT, padx=10, pady=10)
+        
         # 关闭按钮
         close_btn = tk.Button(history_window, text="关闭", command=history_window.destroy)
         close_btn.pack(side=tk.RIGHT, padx=10, pady=10)

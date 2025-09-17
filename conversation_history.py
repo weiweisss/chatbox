@@ -92,3 +92,10 @@ class ConversationHistory:
         
         if os.path.exists(history_file):
             os.remove(history_file)
+            
+    def clear_all_history(self):
+        """清除所有历史记录"""
+        for filename in os.listdir(self.history_dir):
+            if filename.endswith(".json"):
+                file_path = os.path.join(self.history_dir, filename)
+                os.remove(file_path)
