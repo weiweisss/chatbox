@@ -644,14 +644,13 @@ class ChatGUI:
                 index = selection[0]
                 ai_id = ai_ids[index]
                 
-                # 不能删除最后一个AI
-                if len(ai_ids) <= 1:
-                    messagebox.showwarning("警告", "至少需要保留一个AI配置")
-                    return
-                    
                 # 确认删除
                 if messagebox.askyesno("确认删除", "确定要删除这个AI配置吗？"):
                     self.config_manager.delete_ai(ai_id)
+                    # 如果删除后没有AI了，添加一个默认AI
+                    if len(self.config_manager.get_ais()) == 0:
+                        self.config_manager.add_ai("默认AI", "", "https://api.openai.com/v1", "gpt-3.5-turbo")
+                    
                     # 刷新列表
                     ai_listbox.delete(0, tk.END)
                     ais = self.config_manager.get_ais()
@@ -660,6 +659,10 @@ class ChatGUI:
                         ai_ids.append(ai_id)
                         display_text = f"{ai_config['name']} ({ai_config['model']})"
                         ai_listbox.insert(tk.END, display_text)
+                    
+                    # 更新API管理器和标题
+                    self.api_manager.update_config(self.config_manager)
+                    self.update_title()
             else:
                 messagebox.showwarning("警告", "请先选择一个AI")
                 

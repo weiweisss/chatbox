@@ -1,12 +1,12 @@
 {
   "autostart": false,
   "ais": {
-    "bb145d18-6dc0-4175-a69b-ed71e3543fd3": {
-      "name": "LongCat",
-      "api_key": "ak_1np7Vs2na7GT13h8nH8VU2VK9166p",
-      "base_url": "https://api.longcat.chat/openai",
-      "model": "LongCat-Flash-Chat"
+    "71587db9-66d8-4a09-8d58-0811b748fafc": {
+      "name": "默认AI",
+      "api_key": "",
+      "base_url": "https://api.openai.com/v1",
+      "model": "gpt-3.5-turbo"
     }
   },
-  "default_ai": "bb145d18-6dc0-4175-a69b-ed71e3543fd3"
+  "default_ai": "71587db9-66d8-4a09-8d58-0811b748fafc"
 }
