@@ -1,18 +1,6 @@
 {
   "autostart": false,
   "ais": {
-    "e6502ce5-8c7d-48ff-8937-6d754263664b": {
-      "name": "默认AI",
-      "api_key": "ak_1np7Vs2na7GT13h8nH8VU2VK9166p",
-      "base_url": "https://api.longcat.chat/openai",
-      "model": "LongCat-Flash-Chat"
-    },
-    "a9c73a00-e092-4bb8-b118-c89449033811": {
-      "name": "deepseek-v3.1",
-      "api_key": "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",
-      "base_url": "https://openrouter.ai/api/v1",
-      "model": "deepseek/deepseek-chat-v3.1:free"
-    }
   },
   "default_ai": "e6502ce5-8c7d-48ff-8937-6d754263664b"
 }
